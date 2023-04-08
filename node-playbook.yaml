@@ -1,0 +1,46 @@
+- name: install node and npm
+  hosts: node-app
+  tasks:
+  - name: update apt and cache
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: install node and npm
+    apt:
+      pkg:
+        - nodejs
+        - npm
+
+- name: create new linux user
+  hosts: node-app
+  tasks:
+    - name: create user
+      user:
+        name: nabil
+        group: admin
+
+- name: deploy nodejs app
+  hosts: node-app
+  tasks:
+    - name: unpack nodejs app
+      unarchive:
+        src: /home/ahmed_nabil/Desktop/nodejs-app-1.0.0.tgz
+        dest: /home/nabil
+
+    - name: install dependencies
+      npm: 
+        path: /home/nabil/package/
+        # its not necessary to write package.json it will detect it automatically
+
+    - name: start app
+      command:
+       chdir: /home/nabil/package/app
+       cmd: node server
+      async: 1000
+      poll: 0
+    - name: ensure app is running
+      shell: ps aux | grep node
+      register: app_status
+    
+    - debug: msg={{app_status}}
